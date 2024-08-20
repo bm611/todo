@@ -1,12 +1,15 @@
 """TODO app."""
 
 import reflex as rx
+from typing import List
 
 
 class State(rx.State):
     """The app state."""
 
-    items = []
+    items: List[str] = []
+    filtered: List[str] = []
+    search_term: str = ""
 
     def add_item(self, form_data: dict[str, str]):
         """Add a new item to the todo list."""
@@ -21,6 +24,16 @@ class State(rx.State):
             item: The item to finish.
         """
         self.items.pop(self.items.index(item))
+
+    # def set_search_term(self, term: dict[str, str]):
+    #     """Set the search term."""
+    #     self.search_term = term.get("search_term")
+
+    @rx.var
+    def filtered_items(self) -> list[str]:
+        if not self.search_term:
+            return self.items
+        return [item for item in self.items if self.search_term.lower() in item.lower()]
 
 
 def todo_block(item: str) -> rx.Component:
@@ -50,9 +63,15 @@ def index() -> rx.Component:
             rx.color_mode.button(position="top-right"),
             # rx.box("Daisy UI", class_name="btn btn-primary btn-outline"),
             rx.heading("Search Todo", class_name="mt-20"),
-            rx.input(
-                placeholder="Enter your search term...",
-                class_name="p-4 w-3/4 h-20 rounded-2xl text-lg md:text-2xl",
+            rx.form(
+                rx.input(
+                    name="search_term",
+                    placeholder="Enter your search term...",
+                    class_name="p-4 w-3/4 h-20 rounded-2xl text-lg md:text-2xl mx-auto",
+                    # on_change=lambda value: State.filtered_items(value),
+                ),
+                # enter_key_submit=True,
+                # reset_on_submit=True,
             ),
             rx.heading("Add Todo", class_name="mt-20"),
             rx.form(
@@ -65,7 +84,7 @@ def index() -> rx.Component:
                 reset_on_submit=True,
                 on_submit=State.add_item,
             ),
-            rx.foreach(State.items, todo_block),
+            rx.foreach(State.filtered_items, todo_block),
             rx.logo(
                 class_name="absolute bottom-0 left-1/2 transform -translate-x-1/2 mb-4"
             ),
