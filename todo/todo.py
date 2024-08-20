@@ -1,49 +1,46 @@
-"""Welcome to Reflex! This file outlines the steps to create a basic app."""
+"""TODO app."""
 
 import reflex as rx
-from todo.components.todo_block import todo_block
 
 
 class State(rx.State):
     """The app state."""
 
-    todo_list = ["apple", "orange"]
-    new_todo = ""
+    items = []
 
-    def set_new_todo(self, value: str):
-        self.new_todo = value
+    def add_item(self, form_data: dict[str, str]):
+        """Add a new item to the todo list."""
+        new_item = form_data.get("new_item")
+        if new_item:
+            self.items.append(new_item)
 
-    def add_todo(self, todo_item: str):
-        self.todo_list.append(todo_item)
+    def finish_item(self, item: str):
+        """Finish an item in the todo list.
 
-    def remove_todo(self, index: int):
-        if 0 <= index < len(self.todo_list):
-            self.todo_list.pop(index)
+        Args:
+            item: The item to finish.
+        """
+        self.items.pop(self.items.index(item))
 
 
-# def action_bar() -> rx.Component:
-#     return rx.form(
-#         rx.hstack(
-#             rx.input(
-#                 placeholder="Summarize this video...",
-#                 value=State.question,
-#                 on_change=State.set_question,
-#                 style=style.input_style,
-#                 radius="large",
-#                 variant="surface",
-#                 size="3",
-#             ),
-#             rx.button(
-#                 "Ask AI",
-#                 type="submit",
-#                 style=style.button_style,
-#                 size="3",
-#             ),
-#         ),
-#         on_submit=State.answer,
-#         enter_key_submit=True,
-#         reset_on_submit=False,
-#     )
+def todo_block(item: str) -> rx.Component:
+    return rx.box(
+        rx.hstack(
+            rx.text(
+                item,
+                class_name="text-2xl text-white font-semibold",
+            ),
+            rx.icon(
+                "trash",
+                class_name="hover:text-purple-500",
+                size=30,
+                color="white",
+                on_click=lambda: State.finish_item(item),
+            ),
+            class_name="flex items-center justify-between p-4",
+        ),
+        class_name="mt-2 p-4 w-3/4 h-24 rounded-2xl text-lg md:text-2xl bg-indigo-600 hover:scale-105 hover:shadow-lg",
+    )
 
 
 @rx.page(route="/", title="Home")
@@ -60,14 +57,15 @@ def index() -> rx.Component:
             rx.heading("Add Todo", class_name="mt-20"),
             rx.form(
                 rx.input(
+                    name="new_item",
                     placeholder="Add a new to-do...",
                     class_name="mb-10 p-4 w-3/4 h-20 rounded-2xl text-lg md:text-2xl mx-auto",
-                    value=State.new_todo,
-                    on_change=State.set_new_todo,
                 ),
                 enter_key_submit=True,
+                reset_on_submit=True,
+                on_submit=State.add_item,
             ),
-            rx.foreach(State.todo_list, todo_block),
+            rx.foreach(State.items, todo_block),
             rx.logo(
                 class_name="absolute bottom-0 left-1/2 transform -translate-x-1/2 mb-4"
             ),
